@@ -1,10 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+  <meta charset="utf-8">
+  <title>{% block title %}Календарь тренировок{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-$END$
+  <div class="container">
+
+    <header class="top-bar">
+      {% if current_user.is_authenticated %}
+        <p>Вы вошли как {{ current_user.username }}. Вы {% if current_user.role=='trainer' %}тренер
+          {% else %}клиент{% endif %}</p>
+        <form method="post" action="{{ url_for('logout') }}">
+          <button>Выйти</button>
+        </form>
+
+
+      {% endif %}
+    </header>
+
+    {% block content %}{% endblock %}
+  </div>
 </body>
 </html>
