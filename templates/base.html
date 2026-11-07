@@ -8,19 +8,21 @@
 <body>
   <div class="container">
 
-    <header class="top-bar">
+
       {% if current_user.is_authenticated %}
+        <header class="top-bar">
         <p>Вы вошли как {{ current_user.username }}. Вы {% if current_user.role=='trainer' %}тренер
           {% else %}клиент{% endif %}</p>
         <form method="post" action="{{ url_for('logout') }}">
           <button>Выйти</button>
         </form>
 
-
+        </header>
       {% endif %}
-    </header>
 
-    {% block content %}{% endblock %}
+
+    {% block content %}
+    {% endblock %}
   </div>
 </body>
 </html>
