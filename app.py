@@ -1,5 +1,5 @@
 from pathlib import Path
-from datetime import date
+from datetime import date, datetime
 import calendar
 from flask import Flask, render_template, request
 from flask import redirect, url_for
@@ -8,11 +8,11 @@ from flask_login import login_user, logout_user
 from flask_login import login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash #куча импортов которые нельзя трогать никому, только добавлять
+from werkzeug.security import check_password_hash  # куча импортов которые нельзя трогать никому, только добавлять
 
 DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
-DB_PATH = DATA_DIR / "train.db" #создает train.db это наша таблица с данными, иногда нам
+DB_PATH = DATA_DIR / "train.db"  # создает train.db это наша таблица с данными, иногда нам
 # придется ее удалять для обновления данных но эту часть тоже не трогаем
 
 app = Flask(__name__)
@@ -22,20 +22,21 @@ app.config["SQLALCHEMY_ECHO"] = True
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
-#с этим я не разобрался но это базовая база поэтому тоже не трогаем
 
-class User(UserMixin, db.Model): #создает нашего пользователя с характеристиками
+
+# с этим я не разобрался но это базовая база поэтому тоже не трогаем
+
+class User(UserMixin, db.Model):  # создает нашего пользователя с характеристиками
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True)
     password_hash = db.Column(db.String(200))
-    role = db.Column(db.String(20), default="client") #это начало нашего разделения доступа
-
+    role = db.Column(db.String(20), default="client")  # это начало нашего разделения доступа
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password) #пароли я скопировал из презентации, так что
+        return check_password_hash(self.password_hash, password)  # пароли я скопировал из презентации, так что
     # тут делать нечего
 
 
@@ -44,20 +45,29 @@ class Train(db.Model):
     year = db.Column(db.Integer, nullable=False)
     month = db.Column(db.Integer, nullable=False)
     day = db.Column(db.Integer, nullable=False)
-    time = db.Column(db.String(5))
+    time = db.Column(db.String(5), nullable=False)
     title = db.Column(db.String(100), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id")) #это надо будет сильно менять так как
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))  # это надо будет сильно менять так как
+
+
 # пока что этот класс чисто для календаря, признаю я это вайбкодил, но примерно понимаю что как
 
+class TrainList(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name_of_exercise = db.Column(db.String(100), nullable=False)
+    sets = db.Column(db.Integer, nullable=False)  # подходы
+    reps = db.Column(db.Integer, nullable=False)  # повторения
+    kg = db.Column(db.Integer, nullable=False)  # вес
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
 
 @login_manager.user_loader
-def load_user(user_id): #связана со следующей функцией, она позволяет
+def load_user(user_id):  # связана со следующей функцией, она позволяет совершать быстрый вход
     return db.session.get(User, int(user_id))
 
 
 @app.route("/register", methods=["GET", "POST"])
-def register(): # функция регистрации пользователя
+def register():  # функция регистрации пользователя
     error = None
     if request.method == "POST":
         username = (request.form.get("username") or "").strip()
@@ -66,24 +76,26 @@ def register(): # функция регистрации пользователя
 
         if not username or not password:
             error = "Введите логин и пароль"
-        elif db.session.scalar( db.select(User).filter_by(username=username) ) is not None:
+        elif db.session.scalar(db.select(User).filter_by(username=username)) is not None:
             error = "Этот логин уже занят"
         else:
             user = User(username=username, role=role)
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
-            login_user(user)# вход сразу после регистрации, сильно необходимая вещь, которую я плохо понял, но обещаю исправиться
+            login_user(user)
             return redirect(url_for("index"))
 
     return render_template("register.html", error=error)
-#в этой функции важно все, но возможно будем что-то менять
+
+
+# в этой функции важно все, но возможно будем что-то менять
 
 @app.route("/login", methods=["GET", "POST"])
-def login():#стандартный вход из презентации
+def login():  # стандартный вход из презентации
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
         query = db.select(User).filter_by(username=username)
         user = db.session.scalar(query)
         if user and user.check_password(password):
@@ -94,23 +106,24 @@ def login():#стандартный вход из презентации
     return render_template("login.html")
 
 
-
 @app.route("/logout", methods=["POST"])
-def logout(): # стандартный выход из аккаунта, возможно поменяем только html
+def logout():  # стандартный выход из аккаунта, возможно поменяем только html
     logout_user()
     return redirect(url_for("login"))
+
 
 MONTHS = [
     "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
     "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
 
 WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
-# эти списки необходимы для работы календаря в html, пока что плохо понимаю в html
-# но чуть позже разберусь
+
+
+# эти списки необходимы для работы календаря в html
 
 @app.route("/")
 @login_required
-def index(): #это основа нашего проекта пока что, тут календарь, он еще не совсем интерактивный, но что есть
+def index():  # это основа нашего проекта пока что, тут календарь, он еще не совсем интерактивный, но что есть
     today = date.today()
     year = request.args.get("year", default=today.year, type=int)
     month = request.args.get("month", default=today.month, type=int)
@@ -139,7 +152,6 @@ def index(): #это основа нашего проекта пока что, �
     prev_y, prev_m = (year - 1, 12) if month == 1 else (year, month - 1)
     next_y, next_m = (year + 1, 1) if month == 12 else (year, month + 1)
 
-
     return render_template(
         "calendar.html",
         weeks=weeks,
@@ -154,11 +166,12 @@ def index(): #это основа нашего проекта пока что, �
         selected_date=selected_date,
     )
 
-@app.route("/add", methods=["POST"])
+
+@app.route("/add_training_day", methods=["POST"])
 @login_required
 def add_event():
     date_str = request.form.get("date")
-    time_str = request.form.get("time") or None
+    time_str = request.form.get("time")
     title = (request.form.get("title") or "").strip()
 
     if not time_str or not title:
@@ -170,6 +183,7 @@ def add_event():
     db.session.commit()
 
     return redirect(url_for("index", year=y, month=m))
+
 
 @app.route("/delete", methods=["POST"])
 @login_required
@@ -189,17 +203,81 @@ def delete_event():
     if not event:
         return "Событие не найдено", 404
 
-
-
-
     db.session.delete(event)
     db.session.commit()
 
     return redirect(url_for("index", year=event.year, month=event.month))
 
+
+@app.route("/to_training_list", methods=["GET"])
+@login_required
+def to_training_list():
+    todays_date = datetime.now().strftime("%d.%m.%Y")
+    exercises = db.session.scalars(
+        db.select(TrainList)
+        .filter_by(user_id=current_user.id)
+        .order_by(TrainList.id)
+    ).all()
+    return render_template("training_list.html", todays_date=todays_date, exercises=exercises)
+
+
+@app.route("/add_training", methods=["POST"])
+@login_required
+def add_training():
+    name_of_exercise = (request.form.get("name_of_exercise") or "").strip()
+    sets_str = request.form.get("sets")
+    reps_str = request.form.get("reps")
+    kg_str = request.form.get("kg")
+    if not name_of_exercise or not sets_str or not reps_str or not kg_str:
+        return "Нет данных об упражнении", 400
+
+    try:
+        sets = int(sets_str)
+        reps = int(reps_str)
+        kg = int(kg_str)
+    except ValueError:
+        return "Подходы и повторения должны быть числами", 400
+
+    if sets <= 0 or reps <= 0:
+        return "Числа должны быть больше нуля", 400
+
+    db.session.add(TrainList(
+        name_of_exercise=name_of_exercise,
+        sets=sets,
+        reps=reps,
+        kg=kg,
+        user_id=current_user.id,
+    ))
+    db.session.commit()
+
+    return redirect(url_for("to_training_list"))
+
+
+@app.route("/delete_exercise", methods=["POST"])
+@login_required
+def delete_exercise():
+    exercise_id = request.form.get("exercise_id")
+
+    if not exercise_id:
+        return "Не указан ID события", 400
+
+    try:
+        exercise_id = int(exercise_id)
+    except ValueError:
+        return "Некорректный ID", 400
+
+    exercise = db.session.get(TrainList, exercise_id)
+
+    if not exercise:
+        return "Событие не найдено", 404
+
+    db.session.delete(exercise)
+    db.session.commit()
+
+    return redirect(url_for("to_training_list"))
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-
-

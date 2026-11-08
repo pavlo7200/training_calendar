@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="panel">
+    <div class="panel-head">
+        <span>Что было в вашей тренировке — {{ todays_date }}</span>
+        <a class="panel-close"
+           href="{{ url_for('index') }}"
+           title="Закрыть">&times;</a>
+    </div>
+    {% if exercises %}
+    <ul class="task-list">
+        {% for ex in exercises %}
+        <li>{{ ex.name_of_exercise }} — {{ ex.sets }} × {{ ex.reps }}   {{ ex.kg }}кг
+        <form action="/delete_exercise" method="post" style="display:inline;">
+                        <input type="hidden" name="exercise_id" value="{{ ex.id }}">
+                        <button type="submit" class="btn-delete" title="Удалить упражнение">×</button>
+                    </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty-note">Пока нет упражнений — добавь первое.</p>
+    {% endif %}
+
+    <form action="{{ url_for('add_training') }}" method="post" class="add-form">
+        <input type="text" name="name_of_exercise"
+               placeholder="Название упражнения" maxlength="100" required>
+        <input type="number" name="sets" min="1" max="50"
+               placeholder="Подходы" required>
+        <input type="number" name="reps" min="1" max="200"
+               placeholder="Повторения" required>
+        <input type="number" name="kg" min="1" max="500"
+               placeholder="Вес(кг)" required>
+        <button type="submit">Добавить</button>
+    </form>
+
+</div>
+
+{% endblock %}

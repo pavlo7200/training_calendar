@@ -3,75 +3,82 @@
 {% block title %}Календарь — {{ month_name }} {{ year }}{% endblock %}
 
 {% block content %}
-  <h1>Календарь тренировок</h1>
+<h1>Календарь тренировок</h1>
 
-  <div class="nav">
+<div class="nav">
     <a href="{{ url_for('index', year=prev[0], month=prev[1]) }}" title="Предыдущий месяц">&lsaquo;</a>
     <span class="month-name">{{ month_name }} {{ year }}</span>
     <a href="{{ url_for('index', year=next[0], month=next[1]) }}" title="Следующий месяц">&rsaquo;</a>
-  </div>
+</div>
 
 {% if selected_date %}
-  <div class="panel">
+<div class="panel">
     <div class="panel-head">
-      <span>Записаться на тренировку — {{ selected_date }}</span>
-      <a class="panel-close"
-         href="{{ url_for('index', year=year, month=month) }}"
-         title="Закрыть">&times;</a>
+        <span>Записаться на тренировку — {{ selected_date }}</span>
+        <a class="panel-close"
+           href="{{ url_for('index', year=year, month=month) }}"
+           title="Закрыть">&times;</a>
     </div>
 
-    <form action="/add" method="post" class="add-form">
-      <input type="hidden" name="date" value="{{ selected_date }}">
-      <input type="time" name="time">
-      <input type="text" name="title" placeholder="Что за тренировка?" maxlength="100" required>
-      <button type="submit">Добавить</button>
+    <form action="/add_training_day" method="post" class="add-form">
+        <input type="hidden" name="date" value="{{ selected_date }}">
+        <input type="time" name="time">
+        <input type="text" name="title" placeholder="Что за тренировка?" maxlength="100" required>
+        <button type="submit">Добавить</button>
     </form>
-  </div>
+</div>
 {% endif %}
 
 
-  <table class="calendar">
+<table class="calendar">
     <thead>
-      <tr>{% for w in weekdays %}<th>{{ w }}</th>{% endfor %}</tr>
+    <tr>{% for w in weekdays %}
+        <th>{{ w }}</th>
+        {% endfor %}
+    </tr>
     </thead>
     <tbody>
-  {% for week in weeks %}
+    {% for week in weeks %}
     <tr>
-      {% for day in week %}
-  {% if day != 0 %}
-    <td class="day {% if today.year == year and today.month == month and today.day == day %}today{% endif %}">
-      <a class="daylink"
-         href="{{ url_for('index', year=year, month=month, date='%02d.%02d.%04d' % (day, month, year)) }}">
-        <span class="num">{{ day }}</span>
-        {% if day in events %}
-          {% for event in events[day] %}
-          {% set time_ = event[0] %}
-          {% set title_ = event[1] %}
+        {% for day in week %}
+        {% if day != 0 %}
+        <td class="day {% if today.year == year and today.month == month and today.day == day %}today{% endif %}">
+            <a class="daylink"
+               href="{{ url_for('index', year=year, month=month, date='%02d.%02d.%04d' % (day, month, year)) }}">
+                <span class="num">{{ day }}</span>
+                {% if day in events %}
+                {% for event in events[day] %}
+                {% set time_ = event[0] %}
+                {% set title_ = event[1] %}
 
 
-            <div class="event">
-              {% if time_ %}<time>{{ time_ }}</time>{% endif %}
-              {{ title_ }}
-              <form action="/delete" method="post" style="display:inline;">
-                <input type="hidden" name="event_id" value="{{ event[2] }}">
-                <button type="submit" class="btn-delete" title="Удалить тренировку">×</button>
-              </form>
-            </div>
-          {% endfor %}
+                <div class="event">
+                    {% if time_ %}
+                    <time>{{ time_ }}</time>
+                    {% endif %}
+                    {{ title_ }}
+                    <form action="/delete" method="post" style="display:inline;">
+                        <input type="hidden" name="event_id" value="{{ event[2] }}">
+                        <button type="submit" class="btn-delete" title="Удалить тренировку">×</button>
+                    </form>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </a>
+        </td>
+        {% else %}
+        <td class="day empty">&nbsp;</td>
         {% endif %}
-      </a>
-    </td>
-  {% else %}
-    <td class="day empty">&nbsp;</td>
-  {% endif %}
-{% endfor %}
+        {% endfor %}
 
     </tr>
-  {% endfor %}
-</tbody>
+    {% endfor %}
+    </tbody>
 
-  </table>
+</table>
 
-
+<form action="{{ url_for('to_training_list') }}" method="get" class="add-form">
+    <button type="submit" class="btn-primary">Ваша тренировка сегодня</button>
+</form>
 
 {% endblock %}
