@@ -221,3 +221,88 @@ a.daylink {
 .btn-delete:hover {
     color: #a00000;
 }
+
+/* ===== Страница входа ===== */
+.login-wrapper {
+    max-width: 360px;
+    margin: 60px auto;
+    background: #ffffff;
+    border: 1px solid #e4e7ec;
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.login-wrapper h1 {
+    margin: 0 0 18px;
+    font-size: 22px;
+    text-align: center;
+    color: #222;
+}
+
+.login-wrapper form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.login-wrapper input {
+    padding: 10px 12px;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.login-wrapper input:focus {
+    border-color: #8C59FF;
+}
+
+.login-wrapper button {
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    background: #8C59FF;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.login-wrapper button:hover {
+    background: #5620ca;
+}
+
+.login-wrapper a {
+    display: block;
+    margin-top: 14px;
+    text-align: center;
+    color: #8C59FF;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.login-wrapper a:hover {
+    text-decoration: underline;
+}
+
+.login-wrapper label {
+    font-size: 14px;
+    color: #555;
+    margin: 4px 0 2px;
+}
+
+.login-wrapper select {
+    padding: 10px 12px;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 15px;
+
+}
+
+.login-wrapper select:focus {
+    outline: none;
+    border-color: #4f8cff;
+}

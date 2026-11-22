@@ -24,45 +24,56 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 
-# с этим я не разобрался но это базовая база поэтому тоже не трогаем
-
 class User(UserMixin, db.Model):  # создает нашего пользователя с характеристиками
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True)
     password_hash = db.Column(db.String(200))
-    role = db.Column(db.String(20), default="client")  # это начало нашего разделения доступа
+    role = db.Column(db.String(20), default="client")  # разделение доступа
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)  # пароли я скопировал из презентации, так что
-    # тут делать нечего
+        return check_password_hash(self.password_hash, password)
 
 
-class Train(db.Model):
+class Train(db.Model):  # тренировка = событие в календаре
     id = db.Column(db.Integer, primary_key=True)
     year = db.Column(db.Integer, nullable=False)
     month = db.Column(db.Integer, nullable=False)
     day = db.Column(db.Integer, nullable=False)
     time = db.Column(db.String(5), nullable=False)
     title = db.Column(db.String(100), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))  # это надо будет сильно менять так как
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))  # кто создал (клиент)
+
+    exercises = db.relationship("TrainList", backref="train",
+                                cascade="all, delete-orphan")  # при удалении тренировки удалятся упражнения
+    comments = db.relationship("Comment", backref="train",
+                               cascade="all, delete-orphan")  # и комментарии тоже
 
 
-# пока что этот класс чисто для календаря, признаю я это вайбкодил, но примерно понимаю что как
-
-class TrainList(db.Model):
+class TrainList(db.Model):  # упражнения конкретной тренировки
     id = db.Column(db.Integer, primary_key=True)
     name_of_exercise = db.Column(db.String(100), nullable=False)
     sets = db.Column(db.Integer, nullable=False)  # подходы
     reps = db.Column(db.Integer, nullable=False)  # повторения
     kg = db.Column(db.Integer, nullable=False)  # вес
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    train_id = db.Column(db.Integer, db.ForeignKey("train.id"), nullable=False)  # к какой тренировке относится
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"))  # чья тренировка
+
+
+class Comment(db.Model):  # комментарий тренера к тренировке
+    id = db.Column(db.Integer, primary_key=True)
+    train_id = db.Column(db.Integer, db.ForeignKey("train.id"), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    author = db.relationship("User", backref="comments")  # чтобы выводить имя автора
 
 
 @login_manager.user_loader
-def load_user(user_id):  # связана со следующей функцией, она позволяет совершать быстрый вход
+def load_user(user_id):  # позволяет совершать быстрый вход
     return db.session.get(User, int(user_id))
 
 
@@ -76,7 +87,8 @@ def register():  # функция регистрации пользовател�
 
         if not username or not password:
             error = "Введите логин и пароль"
-        elif db.session.scalar(db.select(User).filter_by(username=username)) is not None:
+        elif db.session.scalar(
+                db.select(User).filter_by(username=username)) is not None:
             error = "Этот логин уже занят"
         else:
             user = User(username=username, role=role)
@@ -85,14 +97,11 @@ def register():  # функция регистрации пользовател�
             db.session.commit()
             login_user(user)
             return redirect(url_for("index"))
-
     return render_template("register.html", error=error)
 
 
-# в этой функции важно все, но возможно будем что-то менять
-
 @app.route("/login", methods=["GET", "POST"])
-def login():  # стандартный вход из презентации
+def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
@@ -107,7 +116,7 @@ def login():  # стандартный вход из презентации
 
 
 @app.route("/logout", methods=["POST"])
-def logout():  # стандартный выход из аккаунта, возможно поменяем только html
+def logout():
     logout_user()
     return redirect(url_for("login"))
 
@@ -119,19 +128,15 @@ MONTHS = [
 WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 
 
-# эти списки необходимы для работы календаря в html
-
 @app.route("/")
 @login_required
-def index():  # это основа нашего проекта пока что, тут календарь, он еще не совсем интерактивный, но что есть
+def index():  # календарь
     today = date.today()
     year = request.args.get("year", default=today.year, type=int)
     month = request.args.get("month", default=today.month, type=int)
     selected_date = request.args.get("date")
-    # сетка месяца:
     weeks = calendar.monthcalendar(year, month)
 
-    # события месяца из базы: {день: [(время, название), ...]}
     if current_user.role == "trainer":
         # тренер видит все события за месяц
         rows = (Train.query
@@ -144,11 +149,18 @@ def index():  # это основа нашего проекта пока что,
                 .filter_by(user_id=current_user.id, year=year, month=month)
                 .order_by(Train.day, Train.time)
                 .all())
+
+    # имена пользователей, чтобы тренер видел, чья тренировка
+    usernames = {}
+    for u in db.session.scalars(db.select(User)).all():
+        usernames[u.id] = u.username
+
     events = {}
     for e in rows:
-        events.setdefault(e.day, []).append((e.time, e.title, e.id))
+        events.setdefault(e.day, []).append(
+            (e.time, e.title, e.id, usernames.get(e.user_id, "—"))
+        )
 
-    # соседние месяцы для стрелок навигации
     prev_y, prev_m = (year - 1, 12) if month == 1 else (year, month - 1)
     next_y, next_m = (year + 1, 1) if month == 12 else (year, month + 1)
 
@@ -164,20 +176,24 @@ def index():  # это основа нашего проекта пока что,
         events=events,
         today=today,
         selected_date=selected_date,
+        is_trainer=(current_user.role == "trainer"),
     )
 
 
-@app.route("/add_training_day", methods=["POST"])
+@app.route("/add_training_day", methods=["POST"])  # добавление события в календарь
 @login_required
 def add_event():
     date_str = request.form.get("date")
     time_str = request.form.get("time")
     title = (request.form.get("title") or "").strip()
 
-    if not time_str or not title:
+    if not date_str or not time_str or not title:
         return "Время и название события обязательны", 400
 
-    d, m, y = map(int, date_str.split("."))
+    try:
+        y, m, d = map(int, date_str.split("-"))  # input type=date отдает YYYY-MM-DD
+    except ValueError:
+        return "Некорректная дата", 400
 
     db.session.add(Train(year=y, month=m, day=d, time=time_str, title=title, user_id=current_user.id))
     db.session.commit()
@@ -185,7 +201,7 @@ def add_event():
     return redirect(url_for("index", year=y, month=m))
 
 
-@app.route("/delete", methods=["POST"])
+@app.route("/delete", methods=["POST"])  # удаление записи в календаре
 @login_required
 def delete_event():
     event_id = request.form.get("event_id")
@@ -203,42 +219,67 @@ def delete_event():
     if not event:
         return "Событие не найдено", 404
 
+    if event.user_id != current_user.id:  # удаляет только владелец
+        return "Можно удалять только свои тренировки"
+    y, m = event.year, event.month
     db.session.delete(event)
     db.session.commit()
+    return redirect(url_for("index", year=y, month=m))
 
-    return redirect(url_for("index", year=event.year, month=event.month))
 
-
-@app.route("/to_training_list", methods=["GET"])
+@app.route("/train/<int:train_id>")
 @login_required
-def to_training_list():
-    todays_date = datetime.now().strftime("%d.%m.%Y")
+def train_page(train_id):  # страница конкретной тренировки
+    train = db.session.get(Train, train_id)
+    if not train:
+        return "Тренировка не найдена", 404
+
+    if current_user.role != "trainer" and train.user_id != current_user.id:
+        return "Нет доступа к этой тренировке", 403
+
     exercises = db.session.scalars(
-        db.select(TrainList)
-        .filter_by(user_id=current_user.id)
-        .order_by(TrainList.id)
+        db.select(TrainList).filter_by(train_id=train.id).order_by(TrainList.id)
     ).all()
-    return render_template("training_list.html", todays_date=todays_date, exercises=exercises)
+    comments = db.session.scalars(
+        db.select(Comment).filter_by(train_id=train.id).order_by(Comment.created_at)
+    ).all()
+
+    return render_template(
+        "training_list.html",
+        train=train,
+        exercises=exercises,
+        comments=comments,
+        is_owner=(train.user_id == current_user.id),
+        is_trainer=(current_user.role == "trainer"),
+    )
 
 
-@app.route("/add_training", methods=["POST"])
+@app.route("/add_training", methods=["POST"])  # добавляет упражнение в тренировку
 @login_required
 def add_training():
+    train_id_str = request.form.get("train_id")
     name_of_exercise = (request.form.get("name_of_exercise") or "").strip()
     sets_str = request.form.get("sets")
     reps_str = request.form.get("reps")
     kg_str = request.form.get("kg")
-    if not name_of_exercise or not sets_str or not reps_str or not kg_str:
+
+    if not train_id_str or not name_of_exercise or not sets_str or not reps_str or not kg_str:
         return "Нет данных об упражнении", 400
+
+    train = db.session.get(Train, int(train_id_str))
+    if not train:
+        return "Тренировка не найдена", 404
+    if current_user.role != "trainer" and train.user_id != current_user.id:
+        return "Это не ваша тренировка", 403
 
     try:
         sets = int(sets_str)
         reps = int(reps_str)
         kg = int(kg_str)
     except ValueError:
-        return "Подходы и повторения должны быть числами", 400
+        return "Подходы, повторения и вес должны быть числами", 400
 
-    if sets <= 0 or reps <= 0:
+    if sets <= 0 or reps <= 0 or kg <= 0:
         return "Числа должны быть больше нуля", 400
 
     db.session.add(TrainList(
@@ -246,20 +287,21 @@ def add_training():
         sets=sets,
         reps=reps,
         kg=kg,
+        train_id=train.id,
         user_id=current_user.id,
     ))
     db.session.commit()
 
-    return redirect(url_for("to_training_list"))
+    return redirect(url_for("train_page", train_id=train.id))
 
 
-@app.route("/delete_exercise", methods=["POST"])
+@app.route("/delete_exercise", methods=["POST"])  # удаление упражнения
 @login_required
 def delete_exercise():
     exercise_id = request.form.get("exercise_id")
 
     if not exercise_id:
-        return "Не указан ID события", 400
+        return "Не указан ID упражнения", 400
 
     try:
         exercise_id = int(exercise_id)
@@ -269,12 +311,35 @@ def delete_exercise():
     exercise = db.session.get(TrainList, exercise_id)
 
     if not exercise:
-        return "Событие не найдено", 404
+        return "Упражнение не найдено", 404
+    if exercise.train.user_id != current_user.id:  # можно удалять только из своей тренировки
+        return "Можно удалять только из своей тренировки", 403
 
+    train_id = exercise.train_id
     db.session.delete(exercise)
     db.session.commit()
 
-    return redirect(url_for("to_training_list"))
+    return redirect(url_for("train_page", train_id=train_id))
+
+
+@app.route("/add_comment", methods=["POST"])  # комментарий тренера к тренировке
+@login_required
+def add_comment():
+    if current_user.role != "trainer":
+        return "Комментировать может только тренер", 403
+
+    train_id = request.form.get("train_id")
+    text = (request.form.get("text") or "").strip()
+    if not train_id or not text:
+        return "Нужен ID тренировки и текст комментария", 400
+
+    train = db.session.get(Train, int(train_id))
+    if not train:
+        return "Тренировка не найдена", 404
+
+    db.session.add(Comment(train_id=train.id, author_id=current_user.id, text=text))
+    db.session.commit()
+    return redirect(url_for("train_page", train_id=train.id))
 
 
 if __name__ == "__main__":

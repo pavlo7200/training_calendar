@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="21c4a125-e8c3-40b2-ae3a-d9adc50941f3" name="Changes" comment="исправил небольшую ошибку оформления">
-      <change afterPath="$PROJECT_DIR$/templates/training_list.html" afterDir="false" />
+    <list default="true" id="21c4a125-e8c3-40b2-ae3a-d9adc50941f3" name="Changes" comment="Добавил тренировочный базовый лист, исправил мелкие ошибки, но наверняка наделал новых">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/train.db" beforeDir="false" />
@@ -14,6 +13,7 @@
       <change beforePath="$PROJECT_DIR$/templates/calendar.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/calendar.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/login.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/training_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/training_list.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,23 +54,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "JavaScript Debug.base.html.executor": "Run",
-    "JavaScript Debug.calendar.html.executor": "Run",
-    "JavaScript Debug.training_list.html.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.app.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "main",
-    "node.js.detected.package.jshint": "true",
-    "node.js.selected.package.jshint": ""
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;JavaScript Debug.base.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.calendar.html.executor&quot;: &quot;Run&quot;,
+    &quot;JavaScript Debug.training_list.html.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.jshint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.jshint&quot;: &quot;&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -110,7 +110,15 @@
       <option name="project" value="LOCAL" />
       <updated>1794070773867</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Добавил тренировочный базовый лист, исправил мелкие ошибки, но наверняка наделал новых">
+      <option name="closed" value="true" />
+      <created>1794163819364</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1794163819364</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -142,6 +150,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="База проекта, включает в себя календарь с возможностью записываться на тренировки(надо добавить тренировочный лист), регистрацию и вход с разделением ролей(добавить больше различий)" />
     <MESSAGE value="исправил небольшую ошибку оформления" />
-    <option name="LAST_COMMIT_MESSAGE" value="исправил небольшую ошибку оформления" />
+    <MESSAGE value="Добавил тренировочный базовый лист, исправил мелкие ошибки, но наверняка наделал новых" />
+    <option name="LAST_COMMIT_MESSAGE" value="Добавил тренировочный базовый лист, исправил мелкие ошибки, но наверняка наделал новых" />
   </component>
 </project>

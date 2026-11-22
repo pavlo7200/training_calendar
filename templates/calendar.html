@@ -10,7 +10,6 @@
     <span class="month-name">{{ month_name }} {{ year }}</span>
     <a href="{{ url_for('index', year=next[0], month=next[1]) }}" title="Следующий месяц">&rsaquo;</a>
 </div>
-
 {% if selected_date %}
 <div class="panel">
     <div class="panel-head">
@@ -20,7 +19,7 @@
            title="Закрыть">&times;</a>
     </div>
 
-    <form action="/add_training_day" method="post" class="add-form">
+    <form action="{{ url_for('add_event') }}" method="post" class="add-form">
         <input type="hidden" name="date" value="{{ selected_date }}">
         <input type="time" name="time">
         <input type="text" name="title" placeholder="Что за тренировка?" maxlength="100" required>
@@ -44,27 +43,28 @@
         {% if day != 0 %}
         <td class="day {% if today.year == year and today.month == month and today.day == day %}today{% endif %}">
             <a class="daylink"
-               href="{{ url_for('index', year=year, month=month, date='%02d.%02d.%04d' % (day, month, year)) }}">
+               href="{{ url_for('index', year=year, month=month, date='%04d-%02d-%02d' % (year, month, day)) }}">
                 <span class="num">{{ day }}</span>
-                {% if day in events %}
-                {% for event in events[day] %}
-                {% set time_ = event[0] %}
-                {% set title_ = event[1] %}
-
-
-                <div class="event">
-                    {% if time_ %}
-                    <time>{{ time_ }}</time>
-                    {% endif %}
-                    {{ title_ }}
-                    <form action="/delete" method="post" style="display:inline;">
-                        <input type="hidden" name="event_id" value="{{ event[2] }}">
-                        <button type="submit" class="btn-delete" title="Удалить тренировку">×</button>
-                    </form>
-                </div>
-                {% endfor %}
-                {% endif %}
             </a>
+
+            {% if day in events %}
+            {% for event in events[day] %}
+            <div class="event">
+                {% if is_trainer %}<small>{{ event[3] }}</small>{% endif %}
+                {% if event[0] %}
+                <time>{{ event[0] }}</time>
+                {% endif %}
+                <a href="{{ url_for('train_page', train_id=event[2]) }}">{{ event[1] }}</a>
+
+                <form action="{{ url_for('delete_event') }}" method="post" style="display:inline;">
+                    <input type="hidden" name="event_id" value="{{ event[2] }}">
+                    <button type="submit" class="btn-delete" title="Удалить тренировку">×</button>
+                </form>
+
+
+            </div>
+            {% endfor %}
+            {% endif %}
         </td>
         {% else %}
         <td class="day empty">&nbsp;</td>
@@ -77,8 +77,5 @@
 
 </table>
 
-<form action="{{ url_for('to_training_list') }}" method="get" class="add-form">
-    <button type="submit" class="btn-primary">Ваша тренировка сегодня</button>
-</form>
-
 {% endblock %}
+
