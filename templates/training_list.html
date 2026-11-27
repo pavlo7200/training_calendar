@@ -5,7 +5,7 @@
 <div class="panel">
 
     <div class="panel-head">
-        <span>{{ train.title }} — {{ "%02d"|format(train.day) }}.{{ "%02d"|format(train.month) }}.{{ train.year }}</span>
+        <span>{{ train.title }} — {{ "%02d"|format(train.day) }}.{{ "%02d"|format(train.month) }}.{{ train.year }}. Тренировка {{ user.username }}</span>
         <a class="panel-close"
            href="{{ url_for('index', year=train.year, month=train.month) }}"
            title="Закрыть">&times;</a>

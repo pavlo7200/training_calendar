@@ -1,14 +1,9 @@
 from pathlib import Path
-from datetime import date, datetime
-import calendar
-from flask import Flask, render_template, request
-from flask import redirect, url_for
-from flask_login import LoginManager, UserMixin
-from flask_login import login_user, logout_user
-from flask_login import login_required, current_user
+
+from flask import Flask
+from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash  # куча импортов которые нельзя трогать никому, только добавлять
+  # куча импортов которые нельзя трогать никому, только добавлять
 
 DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)

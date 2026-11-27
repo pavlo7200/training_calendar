@@ -43,7 +43,7 @@
         {% if day != 0 %}
         <td class="day {% if today.year == year and today.month == month and today.day == day %}today{% endif %}">
             <a class="daylink"
-               href="{{ url_for('index', year=year, month=month, date='%04d-%02d-%02d' % (year, month, day)) }}">
+               href="{{ url_for('index', year=year, month=month, date='%02d.%02d.%04d' % (day, month, year)) }}">
                 <span class="num">{{ day }}</span>
             </a>
 

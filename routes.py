@@ -1,18 +1,16 @@
-from pathlib import Path
-from datetime import date, datetime
+from datetime import date
 import calendar
-from flask import Flask, render_template, request
+from flask import render_template, request
 from flask import redirect, url_for
-from flask_login import LoginManager, UserMixin
+
 from flask_login import login_user, logout_user
 from flask_login import login_required, current_user
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash  # куча импортов которые нельзя трогать никому, только добавлять
+# куча импортов которые нельзя трогать никому, только добавлять
 
 
 from config import app, db
-from models import User, Train,TrainList,Comment
+from models import User, Train, TrainList, Comment
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():  # функция регистрации пользователя
@@ -128,7 +126,7 @@ def add_event():
         return "Время и название события обязательны", 400
 
     try:
-        y, m, d = map(int, date_str.split("-"))  # input type=date отдает YYYY-MM-DD
+        d, m, y = map(int, date_str.split("."))
     except ValueError:
         return "Некорректная дата", 400
 
@@ -168,6 +166,7 @@ def delete_event():
 @login_required
 def train_page(train_id):  # страница конкретной тренировки
     train = db.session.get(Train, train_id)
+    user=db.session.get(User, train.user_id)
     if not train:
         return "Тренировка не найдена", 404
 
@@ -184,6 +183,7 @@ def train_page(train_id):  # страница конкретной тренир�
     return render_template(
         "training_list.html",
         train=train,
+        user=user,
         exercises=exercises,
         comments=comments,
         is_owner=(train.user_id == current_user.id),
